@@ -32,7 +32,7 @@ public class ExecutableDdlJob4CreateTable extends ExecutableDdlJob {
 
     private CreateTableValidateTask createTableValidateTask;
     private CreateTableAddTablesExtMetaTask createTableAddTablesExtMetaTask;
-    private CreateTablePhyDdlTask createTablePhyDdlTask;
+    private CreateTablePhyDdlTask createTablePhyDdlTask; // 创建物理表任务; 逆向操作为drop table
     private CreateTableAddTablesMetaTask createTableAddTablesMetaTask;
     private CdcDdlMarkTask cdcDdlMarkTask;
     private CreateTableShowTableMetaTask createTableShowTableMetaTask;

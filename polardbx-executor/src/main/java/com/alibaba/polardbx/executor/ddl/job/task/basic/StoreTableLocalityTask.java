@@ -58,7 +58,7 @@ public class StoreTableLocalityTask extends BaseGmsTask {
     @Override
     protected void executeImpl(Connection metaDbConnection, ExecutionContext executionContext) {
         SchemaManager sm = OptimizerContext.getContext(getSchemaName()).getLatestSchemaManager();
-        LocalityManager lm = LocalityManager.getInstance();
+        LocalityManager lm = LocalityManager.getInstance(); // 存储table位置
 
         TableMeta tableMeta = sm.getTable(getLogicalTableName());
 
@@ -68,7 +68,7 @@ public class StoreTableLocalityTask extends BaseGmsTask {
             lm.deleteLocalityOfTable(tableMeta.getId());
         }
         try {
-            TableInfoManager.updateTableVersion(schemaName, logicalTableName, metaDbConnection);
+            TableInfoManager.updateTableVersion(schemaName, logicalTableName, metaDbConnection); // 更新table版本号.发送通知
         } catch (Exception e) {
             throw GeneralUtil.nestedException(e);
         }

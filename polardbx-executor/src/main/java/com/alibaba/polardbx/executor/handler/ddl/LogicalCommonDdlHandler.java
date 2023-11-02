@@ -135,7 +135,7 @@ public abstract class LogicalCommonDdlHandler extends HandlerCommon {
         // Build a specific DDL job by subclass.
         DdlJob ddlJob = returnImmediately ?
             new TransientDdlJob() :
-            buildDdlJob(logicalDdlPlan, executionContext);
+            buildDdlJob(logicalDdlPlan, executionContext); // 构建ddl job
 
         // Validate the DDL job before request.
         validateJob(logicalDdlPlan, ddlJob, executionContext);
@@ -144,7 +144,7 @@ public abstract class LogicalCommonDdlHandler extends HandlerCommon {
             return buildExplainResultCursor(logicalDdlPlan, ddlJob, executionContext);
         }
 
-        // Handle the client DDL request on the worker side.
+        // Handle the client DDL request on the worker side.处理ddl请求
         handleDdlRequest(ddlJob, executionContext);
 
         if (executionContext.getDdlContext().isSubJob()) {
@@ -235,7 +235,7 @@ public abstract class LogicalCommonDdlHandler extends HandlerCommon {
             DdlEngineRequester.create(ddlJob, executionContext).executeSubJob(
                 ddlContext.getParentJobId(), ddlContext.getParentTaskId(), ddlContext.isForRollback());
         } else {
-            DdlEngineRequester.create(ddlJob, executionContext).execute();
+            DdlEngineRequester.create(ddlJob, executionContext).execute(); // 创建任务,执行
         }
     }
 

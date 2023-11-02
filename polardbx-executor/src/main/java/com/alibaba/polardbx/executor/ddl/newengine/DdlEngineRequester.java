@@ -102,12 +102,12 @@ public class DdlEngineRequester {
     }
 
     public void execute() {
-        ddlContext.setResources(ddlJob.getExcludeResources());
+        ddlContext.setResources(ddlJob.getExcludeResources()); // 比如把 sharding.t_order 添加到排除资源里
 
-        // Create a new job and put it in the queue.
+        // Create a new job and put it in the queue.存储job
         ddlJobManager.storeJob(ddlJob, ddlContext);
 
-        // Request the leader to perform the job.
+        // Request the leader to perform the job.通知leader
         DdlRequest ddlRequest = notifyLeader(ddlContext.getSchemaName(), Lists.newArrayList(ddlContext.getJobId()));
 
         // Wait for response from the leader, then respond to the client.

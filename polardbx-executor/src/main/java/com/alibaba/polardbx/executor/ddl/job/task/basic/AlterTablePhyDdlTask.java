@@ -91,7 +91,7 @@ public class AlterTablePhyDdlTask extends BasePhyDdlTask {
             super.executeImpl(executionContext);
         } catch (PhysicalDdlException e) {
             int successCount = e.getSuccessCount();
-            if (successCount == 0) {
+            if (successCount == 0) { // 都没执行成功,支持回滚
                 enableRollback(this);
             } else {
                 // Some physical DDLs failed && they do not support rollback,
@@ -115,11 +115,11 @@ public class AlterTablePhyDdlTask extends BasePhyDdlTask {
             return genReversedPhysicalPlans(rollbackSql, executionContext);
         }
 
-        String origSql = StringUtils.isNotEmpty(sourceSql) ? sourceSql : executionContext.getDdlContext().getDdlStmt();
-        SQLAlterTableStatement alterTableStmt = (SQLAlterTableStatement) FastsqlUtils.parseSql(origSql).get(0);
-        if (AlterTableRollbacker.checkIfRollbackable(alterTableStmt)) {
-            String reversedSql = genReversedAlterTableStmt(alterTableStmt);
-            return genReversedPhysicalPlans(reversedSql, executionContext);
+        String origSql = StringUtils.isNotEmpty(sourceSql) ? sourceSql : executionContext.getDdlContext().getDdlStmt(); // 原始sql
+        SQLAlterTableStatement alterTableStmt = (SQLAlterTableStatement) FastsqlUtils.parseSql(origSql).get(0); // 解析
+        if (AlterTableRollbacker.checkIfRollbackable(alterTableStmt)) { // 是否支持回滚
+            String reversedSql = genReversedAlterTableStmt(alterTableStmt); // 生成回滚sql
+            return genReversedPhysicalPlans(reversedSql, executionContext); // 生成回滚执行计划
         } else {
             throw new TddlRuntimeException(ErrorCode.ERR_DDL_JOB_ERROR,
                 "The DDL job is not rollbackable because the DDL includes some operations that doesn't support rollback");
@@ -161,8 +161,8 @@ public class AlterTablePhyDdlTask extends BasePhyDdlTask {
     protected String genReversedAlterTableStmt(SQLAlterTableStatement alterTableStmt) {
         List<SQLAlterTableItem> reversedAlterItems = new ArrayList<>();
 
-        for (SQLAlterTableItem alterItem : alterTableStmt.getItems()) {
-            List<SQLAlterTableItem> reversedItems = convertToReversedItem(alterItem);
+        for (SQLAlterTableItem alterItem : alterTableStmt.getItems()) { // 遍历每一项,比如 add column
+            List<SQLAlterTableItem> reversedItems = convertToReversedItem(alterItem); // 每一项可能对应多个反向sql
             reversedAlterItems.addAll(reversedItems);
         }
 
@@ -175,6 +175,6 @@ public class AlterTablePhyDdlTask extends BasePhyDdlTask {
     private List<SQLAlterTableItem> convertToReversedItem(SQLAlterTableItem origAlterItem) {
         // One original alter item may be reversed to multiple items. For example,
         // ALTER TABLE XXX ADD COLUMN (ca INT, cb INT, cc INT)
-        return AlterTableRollbacker.reverse(schemaName, logicalTableName, origAlterItem);
+        return AlterTableRollbacker.reverse(schemaName, logicalTableName, origAlterItem); // 根据原始sql生成反向sql列表
     }
 }

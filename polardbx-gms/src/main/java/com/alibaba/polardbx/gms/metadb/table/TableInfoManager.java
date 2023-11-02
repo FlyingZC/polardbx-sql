@@ -525,7 +525,7 @@ public class TableInfoManager extends AbstractAccessor {
     }
 
     public boolean checkIfTableExistsWithAnyStatus(String tableSchema, String tableName) {
-        TablesRecord tablesRecord = tablesAccessor.query(tableSchema, tableName, false);
+        TablesRecord tablesRecord = tablesAccessor.query(tableSchema, tableName, false); // 查元数据库该表是否存在
         TablesExtRecord tablesExtRecord = tablesExtAccessor.query(tableSchema, tableName, false);
         return tablesRecord != null || tablesExtRecord != null;
     }

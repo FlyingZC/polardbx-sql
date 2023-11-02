@@ -198,7 +198,7 @@ public class LogicalDropTableHandler extends LogicalCommonDdlHandler {
         ValidateTableVersionTask validateTableVersionTask =
             new ValidateTableVersionTask(dropTablePreparedData.getSchemaName(), tableVersions);
 
-        ExecutableDdlJob result = new DropTableJobFactory(physicalPlanData).create();
+        ExecutableDdlJob result = new DropTableJobFactory(physicalPlanData).create(); // 通过 job factory 创建 job
         result.addTask(validateTableVersionTask);
         result.addTaskRelationship(validateTableVersionTask, result.getHead());
 

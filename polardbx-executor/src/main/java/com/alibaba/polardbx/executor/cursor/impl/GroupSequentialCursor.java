@@ -58,9 +58,9 @@ public class GroupSequentialCursor extends AbstractCursor {
     protected List<Cursor> cursors = new ArrayList<>();
     protected final ReentrantLock cursorLock = new ReentrantLock();
 
-    protected AtomicBoolean started = new AtomicBoolean(false);
-    protected AtomicInteger numObjectsDone = new AtomicInteger(0);
-    protected AtomicInteger numObjectsSkipped = new AtomicInteger(0);
+    protected AtomicBoolean started = new AtomicBoolean(false); // 这条物理记录执行开始
+    protected AtomicInteger numObjectsDone = new AtomicInteger(0); // 执行完成,物理成功失败
+    protected AtomicInteger numObjectsSkipped = new AtomicInteger(0); // 执行跳过
     protected BlockingQueue<Cursor> completedCursorQueue;
 
     protected static final int INTERRUPT_TIMEOUT = 10 * 1000;
@@ -95,11 +95,11 @@ public class GroupSequentialCursor extends AbstractCursor {
         }
 
         String traceId = executionContext.getTraceId();
-        for (List<RelNode> plans : plansByInstance.values()) {
+        for (List<RelNode> plans : plansByInstance.values()) { // 获取该实例上所有的执行计划
             // Inter-instance in parallel and intra-instance sequentially
             executionContext.getExecutorService().submit(schemaName, traceId, AsyncTask.build(() -> {
                 // Execute sequentially on the same instance
-                executeSequentially(plans);
+                executeSequentially(plans); // 具体执行
             }));
         }
 
@@ -117,7 +117,7 @@ public class GroupSequentialCursor extends AbstractCursor {
         }
         for (RelNode plan : plans) {
             GenericPhyObjectRecorder phyObjectRecorder =
-                CrossEngineValidator.getPhyObjectRecorder(plan, executionContext);
+                CrossEngineValidator.getPhyObjectRecorder(plan, executionContext); // 每一条物理sql,对应一条物理执行日志.创建物理执行记录者.记录是否执行成功
 
             try {
                 started.set(true);
@@ -125,9 +125,9 @@ public class GroupSequentialCursor extends AbstractCursor {
                 if (!phyObjectRecorder.checkIfDone()) {
                     Cursor cursor = ExecutorContext.getContext(schemaName)
                         .getTopologyExecutor()
-                        .execByExecPlanNode(plan, executionContext);
+                        .execByExecPlanNode(plan, executionContext); // 执行物理sql
 
-                    phyObjectRecorder.recordDone();
+                    phyObjectRecorder.recordDone(); // 记录执行结果,执行后日志
 
                     cursorLock.lock();
                     try {
@@ -140,11 +140,11 @@ public class GroupSequentialCursor extends AbstractCursor {
                     }
 
                     completedCursorQueue.put(cursor);
-                    numObjectsDone.incrementAndGet();
+                    numObjectsDone.incrementAndGet(); // 统计执行结果
                     numObjectsCountedOnInstance++;
-                } else {
-                    numObjectsSkipped.incrementAndGet();
-                    numObjectsCountedOnInstance++;
+                } else { // 已经执行完成的,直接记录数量
+                    numObjectsSkipped.incrementAndGet(); // 跳过数量++
+                    numObjectsCountedOnInstance++; // 执行数量++
                 }
             } catch (Throwable t) {
                 try {

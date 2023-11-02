@@ -150,7 +150,7 @@ public class DdlJobDataConverter {
         TableRule tableRule = isNewPartDb ? null : buildTableRule(data.getTablesExtRecord());
 
         int index = 0;
-        for (Map.Entry<String, List<List<String>>> topology : data.getTableTopology().entrySet()) {
+        for (Map.Entry<String, List<List<String>>> topology : data.getTableTopology().entrySet()) { // 遍历真实表
             String groupName = topology.getKey();
             for (List<String> phyTableNames : topology.getValue()) {
                 PhyDdlTableOperation phyDdlTableOperation =

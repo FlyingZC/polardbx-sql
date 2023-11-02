@@ -47,7 +47,7 @@ public class ValidateTableVersionTask extends BaseValidateTask {
 
     public void doValidate(ExecutionContext executionContext) {
         SchemaManager sm = OptimizerContext.getContext(schemaName).getLatestSchemaManager();
-        for (Map.Entry<String, Long> tableVersion : tableVersions.entrySet()) {
+        for (Map.Entry<String, Long> tableVersion : tableVersions.entrySet()) { // tableName -> tableVersion
             long oldVersion = tableVersion.getValue();
             if (oldVersion > 0) {
                 long curVersion = sm.getTable(tableVersion.getKey()).getVersion();

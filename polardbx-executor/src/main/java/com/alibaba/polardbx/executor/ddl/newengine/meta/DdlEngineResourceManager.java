@@ -238,7 +238,7 @@ public class DdlEngineResourceManager {
             if(!allLocksTryingToAcquire.containsKey(schemaName)){
                 allLocksTryingToAcquire.put(schemaName, new ArrayList<>());
             }
-            allLocksTryingToAcquire.get(schemaName).add(ddlContext);
+            allLocksTryingToAcquire.get(schemaName).add(ddlContext); // schema下添加ddl上下文
         }
     }
 

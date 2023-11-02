@@ -121,7 +121,7 @@ public class AlterTableRollbacker {
 
         return AlterTableOperation.areAllOperationsRollbackable(alterOperations) && hasNoTableOption;
     }
-
+    // 根据原始sql生成反向sql列表
     public static List<SQLAlterTableItem> reverse(String schemaName, String tableName, SQLAlterTableItem alterItem) {
         if (alterItem instanceof SQLAlterTableAddColumn) {
             return reverse((SQLAlterTableAddColumn) alterItem);

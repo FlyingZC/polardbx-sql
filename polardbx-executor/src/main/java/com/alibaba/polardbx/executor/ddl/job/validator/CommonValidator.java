@@ -42,7 +42,7 @@ public class CommonValidator {
         // Check the capacity of the DDL Engine system table.
         validateDdlJobCapacity(schemaName);
     }
-
+    // 校验 ddl job 容量
     private static void validateDdlJobCapacity(String schemaName) {
         DdlJobManager engineManager = new DdlJobManager();
         int leftJobCount = engineManager.countAll(schemaName);

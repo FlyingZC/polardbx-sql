@@ -151,7 +151,7 @@ public class AlterTableValidateTask extends BaseValidateTask {
             tableMeta.getForeignKeys().values().stream().map(c -> c.constraint).collect(Collectors.toList()));
 
         Set<String> columns = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        Set<String> columnsBeforeDdl = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        Set<String> columnsBeforeDdl = new TreeSet<>(String.CASE_INSENSITIVE_ORDER); // 执行dll之前的所有列
         columns.addAll(tableMeta.getAllColumns().stream().map(c -> c.getName()).collect(Collectors.toList()));
         columnsBeforeDdl.addAll(tableMeta.getAllColumns().stream().map(c -> c.getName()).collect(Collectors.toList()));
         // We need manually add this column since it is not in getAllColumns
@@ -160,7 +160,7 @@ public class AlterTableValidateTask extends BaseValidateTask {
         }
 
         Set<String> indexes = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        Set<String> indexesBeforeDdl = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        Set<String> indexesBeforeDdl = new TreeSet<>(String.CASE_INSENSITIVE_ORDER); // 执行ddl前的所有索引
         indexes
             .addAll(tableMeta.getAllIndexes().stream().map(i -> i.getPhysicalIndexName()).collect(Collectors.toList()));
         indexesBeforeDdl
@@ -172,8 +172,8 @@ public class AlterTableValidateTask extends BaseValidateTask {
         boolean existsPrimary = tableMeta.getPrimaryIndex() != null;
 
         for (SqlAlterSpecification alterItem : sqlAlterTable.getAlters()) {
-            switch (alterItem.getKind()) {
-            case ADD_COLUMN:
+            switch (alterItem.getKind()) { // 修改操作
+            case ADD_COLUMN: // 添加列
                 checkColumnNotExists(columns, ((SqlAddColumn) alterItem).getColName().getLastName());
                 if (((SqlAddColumn) alterItem).getAfterColumn() != null) {
                     checkColumnExists(columns, ((SqlAddColumn) alterItem).getAfterColumn().getLastName());
@@ -183,7 +183,7 @@ public class AlterTableValidateTask extends BaseValidateTask {
                 columns.add(((SqlAddColumn) alterItem).getColName().getLastName());
                 break;
 
-            case DROP_COLUMN:
+            case DROP_COLUMN: // 移除列
                 String columnName = ((SqlDropColumn) alterItem).getColName().getLastName();
                 checkColumnExists(columnsBeforeDdl, columnName);
                 checkModifyShardingKey(columnName);
@@ -198,7 +198,7 @@ public class AlterTableValidateTask extends BaseValidateTask {
                 columns.remove(columnName);
                 break;
 
-            case MODIFY_COLUMN:
+            case MODIFY_COLUMN: // 修改列
                 checkColumnExists(columnsBeforeDdl, ((SqlModifyColumn) alterItem).getColName().getLastName());
                 if (((SqlModifyColumn) alterItem).getAfterColumn() != null) {
                     checkColumnExists(columns, ((SqlModifyColumn) alterItem).getAfterColumn().getLastName());
@@ -208,7 +208,7 @@ public class AlterTableValidateTask extends BaseValidateTask {
 
                 break;
 
-            case ALTER_COLUMN_DEFAULT_VAL:
+            case ALTER_COLUMN_DEFAULT_VAL: // 修改列的默认值
                 checkColumnExists(columnsBeforeDdl,
                     ((SqlAlterColumnDefaultVal) alterItem).getColumnName().getLastName());
                 break;

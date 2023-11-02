@@ -35,11 +35,11 @@ public class PhyDdlExecutionRecord {
     private long taskId;
 
     private AtomicBoolean hasInjected = new AtomicBoolean(false);
+    // SHARDING_SINGLE_GROUP:`t1_VCKh`:false:db076983f56bc339767c752adbf54c59
+    private Set<String> phyObjectsDone = ConcurrentHashMap.newKeySet(); // 执行完成.
 
-    private Set<String> phyObjectsDone = ConcurrentHashMap.newKeySet();
-
-    private int numPhyObjectsTotal;
-    private AtomicInteger numPhyObjectsDone = new AtomicInteger(0);
+    private int numPhyObjectsTotal; // 物理记录总数
+    private AtomicInteger numPhyObjectsDone = new AtomicInteger(0); // 物理完成数量,在执行完成后会增加计数
 
     public long getJobId() {
         return this.jobId;

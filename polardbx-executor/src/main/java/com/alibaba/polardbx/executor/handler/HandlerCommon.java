@@ -436,9 +436,9 @@ public abstract class HandlerCommon implements PlanHandler {
         IRepository myRepo = executorContext.getRepositoryHolder().get(Group.GroupType.MYSQL_JDBC.name());
 
         Map<String, List<RelNode>> plansByInstance = new HashMap<>();
-        for (RelNode subNode : subNodes) {
+        for (RelNode subNode : subNodes) { // 遍历执行单元
             Object possibleTGroupDataSource = myRepo.getGroupExecutor(optimizerContext.getMatrix()
-                .getGroup(((BaseQueryOperation) subNode).getDbIndex())).getDataSource();
+                .getGroup(((BaseQueryOperation) subNode).getDbIndex())).getDataSource(); // 获取物理dataSource
             if (!(possibleTGroupDataSource instanceof TGroupDataSource)) {
                 throw new TddlNestableRuntimeException("Unsupported datasource for INSTANCE_CONCURRENT");
             }
@@ -465,7 +465,7 @@ public abstract class HandlerCommon implements PlanHandler {
             plans.add(subNode);
         }
 
-        executeByInstance(plansByInstance, subCursors, ec, schemaName, exceptions);
+        executeByInstance(plansByInstance, subCursors, ec, schemaName, exceptions); // 按照实例级别执行
     }
 
     protected void executeWithConcurrentPolicy(ExecutionContext executionContext, List<RelNode> inputs,

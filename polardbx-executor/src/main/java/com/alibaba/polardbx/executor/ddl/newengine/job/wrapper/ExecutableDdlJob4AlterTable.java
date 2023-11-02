@@ -24,7 +24,7 @@ import lombok.Data;
 @Data
 public class ExecutableDdlJob4AlterTable extends ExecutableDdlJob {
     /**
-     * first task in Alter Table
+     * first task in Alter Table.zc: AlterTableValidateTask
      */
     private BaseValidateTask tableValidateTask;
 

@@ -147,28 +147,28 @@ public class DdlJobManagerUtils {
         return SCHEDULER_MANAGER.saveContext(ddlContext);
     }
 
-    /**
+    /** 从系统表重新加载缓存物理tables
      * Reload physical tables done to cache from the system table.
      *
      * @param phyDdlExecutionRecord Current DDL context
      */
     public static void reloadPhyTablesDone(PhyDdlExecutionRecord phyDdlExecutionRecord) {
         DdlEngineTaskRecord record =
-            SCHEDULER_MANAGER.fetchTaskRecord(phyDdlExecutionRecord.getJobId(), phyDdlExecutionRecord.getTaskId());
+            SCHEDULER_MANAGER.fetchTaskRecord(phyDdlExecutionRecord.getJobId(), phyDdlExecutionRecord.getTaskId()); // 查询执行记录
 
         clearPhyTablesDone(phyDdlExecutionRecord);
 
-        if (record != null && TStringUtil.isNotEmpty(record.extra)) {
-            String[] phyTablesDone = record.extra.split(DdlConstants.SEMICOLON);
+        if (record != null && TStringUtil.isNotEmpty(record.extra)) { // 之前已经有执行过的信息,不是首次执行,所以有extra信息
+            String[] phyTablesDone = record.extra.split(DdlConstants.SEMICOLON); // 已经执行完成的记录
             int countReallyDone = 0;
-            for (String phyTableDone : phyTablesDone) {
-                phyDdlExecutionRecord.addPhyObjectDone(phyTableDone);
+            for (String phyTableDone : phyTablesDone) { // 遍历已经执行完成的记录
+                phyDdlExecutionRecord.addPhyObjectDone(phyTableDone); // 添加执行完成的记录
                 String[] phyTableInfo = phyTableDone.split(DdlConstants.COLON);
-                if (phyTableInfo.length != 4 || !TStringUtil.equalsIgnoreCase(phyTableInfo[2], "false")) {
+                if (phyTableInfo.length != 4 || !TStringUtil.equalsIgnoreCase(phyTableInfo[2], "false")) { // 只要true的,标识执行成功
                     countReallyDone++;
                 }
             }
-            phyDdlExecutionRecord.setNumPhyObjectsDone(countReallyDone);
+            phyDdlExecutionRecord.setNumPhyObjectsDone(countReallyDone); // 设置已经完成数量
         }
     }
 
@@ -198,7 +198,7 @@ public class DdlJobManagerUtils {
 
                 rowsAffected += engineTaskAccessor
                     .updatePhyDone(phyDdlExecutionRecord.getJobId(), phyDdlExecutionRecord.getTaskId(), phyTableInfo,
-                        false);
+                        false); // 更新执行进度 
 
                 if (withProgress && numPhyTablesDone >= 0 && numPhyTablesTotal > 0) {
                     int progress = numPhyTablesDone * 100 / numPhyTablesTotal;

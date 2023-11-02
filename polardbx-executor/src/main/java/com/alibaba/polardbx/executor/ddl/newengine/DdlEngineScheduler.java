@@ -162,7 +162,7 @@ public class DdlEngineScheduler {
             }
             message.append(jobId).append(",");
         }
-        offerQueue(ddlRequestTransitQueue, ddlRequest, message.toString());
+        offerQueue(ddlRequestTransitQueue, ddlRequest, message.toString()); // job入queue
     }
 
     public void suspend() {
@@ -277,9 +277,9 @@ public class DdlEngineScheduler {
                 try {
                     // Take DDL requests from the instance-level queue, then
                     // dispatch to schema-level queues for scheduling.
-                    DdlRequest ddlRequest = ddlRequestTransitQueue.poll(MORE_WAITING_TIME, TimeUnit.MILLISECONDS);
+                    DdlRequest ddlRequest = ddlRequestTransitQueue.poll(MORE_WAITING_TIME, TimeUnit.MILLISECONDS); // 从队列里拿任务
                     if (ddlRequest != null) {
-                        processRequest(ddlRequest);
+                        processRequest(ddlRequest); // 处理请求
                     } else {
                         // No DDL request received before timeout, so
                         // try to fetch from the DDL job queue directly.
@@ -304,8 +304,8 @@ public class DdlEngineScheduler {
         }
 
         private void processRequest(DdlRequest ddlRequest) {
-            List<DdlEngineRecord> records = ddlJobManager.fetchRecords(ddlRequest.getJobIds());
-            dispatch(records);
+            List<DdlEngineRecord> records = ddlJobManager.fetchRecords(ddlRequest.getJobIds()); // 根据jobId查任务
+            dispatch(records); // 分发任务
         }
 
         private void processQueue() {
@@ -375,14 +375,14 @@ public class DdlEngineScheduler {
             }
             String schemaName = record.schemaName.toLowerCase();
             try {
-                synchronized (ddlJobDeliveryQueue) {
+                synchronized (ddlJobDeliveryQueue) { // ddl job分发queue加锁
                     if (ddlJobDeliveryQueue.contains(record)) {
                         return;
                     }
                     if (DdlEngineDagExecutorMap.contains(schemaName, record.jobId)) {
                         return;
                     }
-                    boolean success = ddlJobDeliveryQueue.offer(record);
+                    boolean success = ddlJobDeliveryQueue.offer(record); // job入队
                     if (!success) {
                         LOGGER.error(String.format(
                             "No enough space in the queue. schemaName:%s, jobId:%s", schemaName, record.jobId));
@@ -455,11 +455,11 @@ public class DdlEngineScheduler {
                     }
 
                     // Take current schema-specific DDL job.
-                    DdlEngineRecord record = ddlJobDeliveryQueue.poll(1, TimeUnit.SECONDS);
+                    DdlEngineRecord record = ddlJobDeliveryQueue.poll(1, TimeUnit.SECONDS); // 取job
                     if (record == null) {
                         continue;
                     }
-                    // Process received DDL request.
+                    // Process received DDL request. 执行
                     schedule(record);
                     // Continue next round right now.
                     continue;
@@ -508,11 +508,11 @@ public class DdlEngineScheduler {
                 LOGGER.debug(String.format("schema:%s is not active for DDL JOB:%s", schemaName, record.jobId));
                 return;
             }
-            final Semaphore semaphore = schedulerConfig.semaphore;
+            final Semaphore semaphore = schedulerConfig.semaphore; // 信号量控制task并发度
             final ExecutorCompletionService completionService = schedulerConfig.completionService;
             final int maxParallelism = schedulerConfig.maxParallelism;
 
-            semaphore.acquire();
+            semaphore.acquire(); // 获取到信号,则提交任务
             try {
                 completionService.submit(AsyncCallableTask.build(
                     new DdlJobExecutor(semaphore, maxParallelism, record.schemaName, record.jobId))
@@ -549,14 +549,14 @@ public class DdlEngineScheduler {
         }
 
         @Override
-        public Boolean call() {
+        public Boolean call() { // 消费ddl job.从Schema级别的Ddl Job队列中取出Ddl Job，然后分派给DdlJobExecutor（Job级别）
             try {
                 LoggerUtil.buildMDC(schemaName);
                 if (!DdlHelper.isRunnable() || !ExecUtils.hasLeadership(null)) {
                     return null;
                 }
                 try {
-                    // Perform the DDL job.
+                    // Perform the DDL job.还原ddl,就是查询
                     DdlHelper.getServerConfigManager().restoreDDL(schemaName, jobId);
                 } catch (Throwable t) {
                     LOGGER.error("Failed to perform the DDL job '" + jobId + "'. Caused by: " + (

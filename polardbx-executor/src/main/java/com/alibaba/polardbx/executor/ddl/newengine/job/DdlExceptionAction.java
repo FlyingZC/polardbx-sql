@@ -27,7 +27,7 @@ import com.alibaba.polardbx.executor.ddl.newengine.utils.TaskHelper;
  */
 public enum DdlExceptionAction {
 
-    /**
+    /** 失败先尝试恢复,不行就暂停
      * try to recover the job when failed (n times)
      * DdlState will turn to PAUSED if fail to recover
      */
@@ -37,7 +37,7 @@ public enum DdlExceptionAction {
      * DdlState will turn to FAILED_ROLLBACK if fail to recover
      */
     ROLLBACK,
-    /**
+    /** 失败先恢复,不行再回滚
      * try to recover first
      * if failed, then try to rollback
      */

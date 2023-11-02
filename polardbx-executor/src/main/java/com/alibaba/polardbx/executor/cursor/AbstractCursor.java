@@ -66,7 +66,7 @@ public abstract class AbstractCursor extends StatisticsCursor {
             synchronized (this) {
                 if (!inited) {
                     if (!enableOperatorMetric) {
-                        doInit();
+                        doInit(); // 调用 GroupSequentialCursor
                     } else {
                         startInitStat();
                         doInit();

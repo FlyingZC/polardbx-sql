@@ -73,7 +73,7 @@ public abstract class AbstractDdlTask extends HandlerCommon implements DdlTask {
         DdlEngineAccessorDelegate delegate = new DdlEngineAccessorDelegate<Integer>() {
 
             @Override
-            protected Integer invoke() {
+            protected Integer invoke() { // 会回调invoke方法
                 int result = 0;
                 duringTransaction(getConnection(), executionContext);
                 DdlEngineTaskRecord taskRecord = TaskHelper.toDdlEngineTaskRecord(currentTask);
@@ -94,7 +94,7 @@ public abstract class AbstractDdlTask extends HandlerCommon implements DdlTask {
                 return result;
             }
         };
-        delegate.execute();
+        delegate.execute(); // 执行 delegate,会开事务,然后回调上面的 invoke 方法
         //will not execute this if there's a failure
         onExecutionSuccess(executionContext);
         currentTask.setState(DdlTaskState.SUCCESS);

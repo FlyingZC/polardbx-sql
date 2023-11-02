@@ -326,7 +326,7 @@ public class DdlEngineTaskAccessor extends AbstractAccessor {
             MetaDbUtil.setParameter(1, params, ParameterMethod.setString, phyObjectInfo);
             MetaDbUtil.setParameter(2, params, ParameterMethod.setLong, jobId);
             MetaDbUtil.setParameter(3, params, ParameterMethod.setLong, taskId);
-            return MetaDbUtil.update(isReset ? RESET_PHY_OBJECT_DONE : APPEND_PHY_OBJECT_DONE, params, connection);
+            return MetaDbUtil.update(isReset ? RESET_PHY_OBJECT_DONE : APPEND_PHY_OBJECT_DONE, params, connection); // 更新执行进度到extra字段里
         } catch (Exception e) {
             throw logAndThrow(
                 "Failed to update " + DDL_ENGINE_TASK_TABLE + " for job " + jobId + " and task " + taskId + " with "

@@ -118,7 +118,7 @@ public class GenericPhyObjectRecorder {
                 "The job '" + ddlContext.getJobId() + "' has been interrupted");
         }
 
-        return checkIfPhyObjectDone();
+        return checkIfPhyObjectDone(); // 根据日志,校验当前的物理sql是不是已经执行过了
     }
 
     public void recordDone() {
@@ -126,11 +126,11 @@ public class GenericPhyObjectRecorder {
             return;
         }
 
-        if (isCurrentPlanSuccessful()) {
+        if (isCurrentPlanSuccessful()) { // 执行成功
             if (isRollBackRunning(ddlContext.getState())) {
                 recordObjectRollback();
             } else {
-                recordObjectNormal();
+                recordObjectNormal(); // 记录执行后结果
             }
         }
     }
@@ -141,7 +141,7 @@ public class GenericPhyObjectRecorder {
         List<ExecutionContext.ErrorMessage> errorMessages =
             (List<ExecutionContext.ErrorMessage>) executionContext.getExtraDatas().get(ExecutionContext.FAILED_MESSAGE);
 
-        if (GeneralUtil.isNotEmpty(errorMessages)) {
+        if (GeneralUtil.isNotEmpty(errorMessages)) { // 获取当前plan执行异常信息
             // Copy a new list to avoid conflict since original list may be updated concurrently.
             List<ExecutionContext.ErrorMessage> currentErrorMessages = new ArrayList<>(errorMessages);
 
@@ -173,14 +173,14 @@ public class GenericPhyObjectRecorder {
 
     protected void recordObjectNormal(String phyObjectInfo, boolean afterPhyDdl) {
         if (executionContext.getParamManager().getBoolean(ConnectionParams.ENABLE_ASYNC_PHY_OBJ_RECORDING) &&
-            phyObjectTaskQueue != null) {
+            phyObjectTaskQueue != null) { // 允许异步记录执行是否成功
             requestPhyObjectRecording(() -> {
                 addPhyObjectDone(phyObjectInfo, afterPhyDdl);
                 return null;
             });
         } else {
-            addPhyObjectDone(phyObjectInfo, afterPhyDdl);
-            DdlJobManagerUtils.appendPhyTableDone(phyDdlExecutionRecord, phyObjectInfo, afterPhyDdl);
+            addPhyObjectDone(phyObjectInfo, afterPhyDdl); // 记录执行进度到内存
+            DdlJobManagerUtils.appendPhyTableDone(phyDdlExecutionRecord, phyObjectInfo, afterPhyDdl); // 更新执行进度到数据库extra字段,执行完成
         }
         printDebugInfo("GenericPhyObjectRecorder.recordObjectNormal() - " + afterPhyDdl,
             phyDdlExecutionRecord, phyObjectInfo);
@@ -263,8 +263,8 @@ public class GenericPhyObjectRecorder {
     }
 
     protected void addPhyObjectDone(String phyObjectInfo, boolean afterPhyDdl) {
-        phyDdlExecutionRecord.addPhyObjectDone(phyObjectInfo);
-        if (afterPhyDdl) {
+        phyDdlExecutionRecord.addPhyObjectDone(phyObjectInfo); // 执行前记录
+        if (afterPhyDdl) { // 执行后记录
             phyDdlExecutionRecord.increasePhyObjsDone();
         }
     }
