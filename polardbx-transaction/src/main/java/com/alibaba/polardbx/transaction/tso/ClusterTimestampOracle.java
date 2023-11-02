@@ -57,9 +57,9 @@ public class ClusterTimestampOracle extends AbstractLifecycle implements ITimest
     class TsoFuture {
         private final AtomicLong tso = new AtomicLong(0);
         private final AtomicReference<Exception> exception = new AtomicReference<>(null);
-        private final FutureTask<Long> futureTask = new FutureTask<>(tso::get);
+        private final FutureTask<Long> futureTask = new FutureTask<>(tso::get); // 4.task从 tsoAtomicLong里获取tso
 
-        public void setTso(long tso) {
+        public void setTso(long tso) { // 4.设置tso的地方,查看反向调用
             this.tso.set(tso);
             futureTask.run();
         }
@@ -71,7 +71,7 @@ public class ClusterTimestampOracle extends AbstractLifecycle implements ITimest
 
         public long waitTso() throws Exception {
             try {
-                final long tso = futureTask.get(timeout, TimeUnit.MILLISECONDS);
+                final long tso = futureTask.get(timeout, TimeUnit.MILLISECONDS); // 3.从task里获取tso
                 if (exception.get() != null) {
                     throw exception.get();
                 }
@@ -84,7 +84,7 @@ public class ClusterTimestampOracle extends AbstractLifecycle implements ITimest
 
     private static final ArrayList<TsoFuture> taskQueue = new ArrayList<>();
 
-    static private void fetchTsoTask() {
+    static private void fetchTsoTask() { // 5.获取tso方法
         ArrayList<TsoFuture> copyed = null;
         synchronized (taskQueue) {
             while (taskQueue.isEmpty()) {
@@ -113,13 +113,13 @@ public class ClusterTimestampOracle extends AbstractLifecycle implements ITimest
                 }
             }
 
-            try (Connection metaDbConn = MetaDbUtil.getConnection()) {
+            try (Connection metaDbConn = MetaDbUtil.getConnection()) { // 6.通过 meta db 获取 tso
                 if (metaDbConn.isWrapperFor(XConnection.class)) {
                     final XConnection xConnection = metaDbConn.unwrap(XConnection.class);
                     final int oldTimeout = xConnection.getNetworkTimeout();
                     try {
                         xConnection.setNetworkTimeout(null, fetchTimeout);
-                        tsoBase = xConnection.getTSO(copyed.size());
+                        tsoBase = xConnection.getTSO(copyed.size()); // 7.里面通过rpc请求获取tso
                         // Success.
                         break;
                     } finally {
@@ -179,7 +179,7 @@ public class ClusterTimestampOracle extends AbstractLifecycle implements ITimest
         final Runnable tsoAsyncTask = () -> {
             while (true) {
                 try {
-                    fetchTsoTask();
+                    fetchTsoTask(); // 通过任务一直获取tso
                 } catch (Throwable t) {
                     logger.error(t);
                 }
@@ -196,14 +196,14 @@ public class ClusterTimestampOracle extends AbstractLifecycle implements ITimest
             taskQueue.notify();
         }
         try {
-            return future.waitTso();
+            return future.waitTso(); // 2.通过future获取tso
         } catch (Exception e) {
             throw GeneralUtil.nestedException(e);
         }
     }
 
     @Override
-    public long nextTimestamp() {
+    public long nextTimestamp() { // 1.重写获取tso
         return nextTimestampGrouping();
     }
 

@@ -204,37 +204,37 @@ public class DeadlockDetectionTask implements Runnable {
                                DiGraph<TrxLookupSet.Transaction> graph) {
         boolean isMySQL80 = ExecUtils.isMysql80Version();
         String deadLocksSql = isMySQL80 ? SQL_QUERY_DEADLOCKS_80 : SQL_QUERY_DEADLOCKS;
-
+        // 注意下面都是处理单个DN数据库实例上的
         try (final Connection conn = createPhysicalConnectionForLeaderStorage(dataSource);
             final Statement stmt = conn.createStatement();
-            final ResultSet rs = stmt.executeQuery(deadLocksSql)) {
+            final ResultSet rs = stmt.executeQuery(deadLocksSql)) { // 查询当前dn上所有锁等待的信息.查询sql
 
-            while (rs.next()) {
+            while (rs.next()) { // 对于一条等待信息记录(上面查询中的一行)
                 // Get the waiting and blocking connection id of DN
-                final long waiting = rs.getLong("waiting_conn_id");
-                final long blocking = rs.getLong("blocking_conn_id");
+                final long waiting = rs.getLong("waiting_conn_id"); // 等待锁的物理连接id
+                final long blocking = rs.getLong("blocking_conn_id"); // 持有锁的物理连接id
 
-                // Get the waiting and blocking transaction
+                // Get the waiting and blocking transaction (等待锁的事务, 持有锁的事务, 事务所在的group名(dsName))
                 final Triple<TrxLookupSet.Transaction, TrxLookupSet.Transaction, String> waitingAndBlockingTrx =
-                    lookupSet.getWaitingAndBlockingTrx(groupNames, waiting, blocking);
+                    lookupSet.getWaitingAndBlockingTrx(groupNames, waiting, blocking); // 获取等待锁和持有锁的事务. groupNames是当前物理库实例下的 所有物理库名
 
                 final TrxLookupSet.Transaction waitingTrx = waitingAndBlockingTrx.getLeft();
                 final TrxLookupSet.Transaction blockingTrx = waitingAndBlockingTrx.getMiddle();
 
-                if (null != waitingTrx && null != blockingTrx) {
+                if (null != waitingTrx && null != blockingTrx) { // 说明有死锁
                     // Update the wait-for graph and the lookup set
-                    graph.addDiEdge(waitingTrx, blockingTrx);
+                    graph.addDiEdge(waitingTrx, blockingTrx); // 更新等待图, 等待锁的事务 等待 持有锁的事务.waiting 指向 blocking(持有锁)
                     try {
-                        // Get the group which the waiting and blocking thread id are in
+                        // Get the group which the waiting and blocking thread id are in 物理数据库名
                         final String groupName = waitingAndBlockingTrx.getRight();
 
-                        // Get the waiting local transaction of this group
-                        final LocalTransaction waitingLocalTrx = waitingTrx.getLocalTransaction(groupName);
-                        extractWaitingTrx(rs, waitingLocalTrx, isMySQL80);
+                        // Get the waiting local transaction of this group 获取等待事务,对应的本地事务
+                        final LocalTransaction waitingLocalTrx = waitingTrx.getLocalTransaction(groupName); // 创建空的等待本地事务
+                        extractWaitingTrx(rs, waitingLocalTrx, isMySQL80); // 从死锁sql rs中提取本地等待事务的信息
 
-                        // Get the blocking local transaction of this group
+                        // Get the blocking local transaction of this group 获取阻塞事务,对应的本地事务
                         final LocalTransaction blockingLocalTrx = blockingTrx.getLocalTransaction(groupName);
-                        extractBlockingTrx(rs, blockingLocalTrx, isMySQL80);
+                        extractBlockingTrx(rs, blockingLocalTrx, isMySQL80); // 从死锁sql中 提取持有锁的事务的信息
                     } catch (Throwable t) {
                         // Ignore.
                         logger.warn("Get lock-wait message failed.", t);
@@ -292,7 +292,7 @@ public class DeadlockDetectionTask implements Runnable {
 
     private void extractWaitingTrx(ResultSet rs, LocalTransaction waitingLocalTrx, boolean isMySQL80)
         throws SQLException {
-        if (!waitingLocalTrx.isUpdated()) {
+        if (!waitingLocalTrx.isUpdated()) { // 本地事务还没塞值,从 result 里塞值,等待事务的信息
             waitingLocalTrx.setState(rs.getString("waiting_state"));
             final String physicalSql = rs.getString("waiting_physical_sql");
             // Record a truncated SQL
@@ -305,13 +305,13 @@ public class DeadlockDetectionTask implements Runnable {
             waitingLocalTrx.setHeapSize(rs.getInt("waiting_heap_size"));
             waitingLocalTrx.setRowLocks(rs.getInt("waiting_row_locks"));
 
-            waitingLocalTrx.setUpdated(true);
+            waitingLocalTrx.setUpdated(true); // 塞过值了
         }
-
+        // 等待锁信息塞值
         if (null == waitingLocalTrx.getWaitingTrxLock()) {
             // Update waiting-lock information of this local transaction
             if (isMySQL80) {
-                waitingLocalTrx.setWaitingTrxLock(new TrxLock(
+                waitingLocalTrx.setWaitingTrxLock(new TrxLock( // 等待锁的信息
                     rs.getString("waiting_lock_id"),
                     rs.getString("waiting_lock_mode"),
                     rs.getString("waiting_lock_type"),
@@ -338,7 +338,7 @@ public class DeadlockDetectionTask implements Runnable {
         }
     }
 
-    /**
+    /** 获取所有事务信息
      * Fetch all transactions on the instance.
      */
     private TrxLookupSet fetchTransInfo() {
@@ -356,9 +356,9 @@ public class DeadlockDetectionTask implements Runnable {
                 final long frontendConnId = (Long) row.get("FRONTEND_CONN_ID");
                 final Long startTime = (Long) row.get("START_TIME");
                 final String sql = (String) row.get("SQL");
-                final GroupConnPair entry = new GroupConnPair(group, connId);
-                lookupSet.addNewTransaction(entry, transId);
-                lookupSet.updateTransaction(transId, frontendConnId, sql, startTime);
+                final GroupConnPair entry = new GroupConnPair(group, connId); // 按照ds+物理连接id分组
+                lookupSet.addNewTransaction(entry, transId); // ds+物理连接id -> 事务id
+                lookupSet.updateTransaction(transId, frontendConnId, sql, startTime); // 构建 事务id -> 事务映射
             }
         }
         return lookupSet;
@@ -392,28 +392,28 @@ public class DeadlockDetectionTask implements Runnable {
             // Get all global transaction information
             final TrxLookupSet lookupSet = fetchTransInfo();
 
-            // Get all group data sources, and group by DN's ID (host:port)
+            // Get all group data sources, and group by DN's ID (host:port) // DN的ip:port 到 dataSources 映射
             final Map<String, List<TGroupDataSource>> instId2GroupList = ExecUtils.getInstId2GroupList(allSchemas);
 
             final DiGraph<TrxLookupSet.Transaction> graph = new DiGraph<>();
 
             // For each DN, find the lock-wait information and add it to the graph
-            for (List<TGroupDataSource> groupDataSources : instId2GroupList.values()) {
-                if (CollectionUtils.isNotEmpty(groupDataSources)) {
+            for (List<TGroupDataSource> groupDataSources : instId2GroupList.values()) { // 对于每个物理实例下的所有数据源
+                if (CollectionUtils.isNotEmpty(groupDataSources)) { // 每个dn上选一个链接
                     // Since all data sources are in the same DN, any data source is ok
-                    final TGroupDataSource groupDataSource = groupDataSources.get(0);
+                    final TGroupDataSource groupDataSource = groupDataSources.get(0); // 选一个链接
 
-                    // Get all group names in this DN
+                    // Get all group names in this DN // 其实是 dbGroupKeys 该实例下的所有物理库名称( polardbx里的groupName只是变量名,不同地方含义不一样)
                     final Set<String> groupNames =
                         groupDataSources.stream().map(TGroupDataSource::getDbGroupKey).collect(Collectors.toSet());
 
                     // Fetch lock-wait information for this DN,
                     // and update the lookup set and the graph with the information
-                    fetchLockWaits(groupDataSource, groupNames, lookupSet, graph);
+                    fetchLockWaits(groupDataSource, groupNames, lookupSet, graph); // 1.查询dn上的锁等待信息;2.更新lookupSet和graph
                 }
             }
 
-            graph.detect().ifPresent((cycle) -> {
+            graph.detect().ifPresent((cycle) -> { // 3.检测死锁
                 assert cycle.size() >= 2;
                 final Pair<StringBuilder, StringBuilder> deadlockLog = DeadlockParser.parseGlobalDeadlock(cycle);
                 final StringBuilder simpleDeadlockLog = deadlockLog.getKey();
@@ -425,7 +425,7 @@ public class DeadlockDetectionTask implements Runnable {
                 // TODO: kill transaction by some priority, such as create time, or prefer to kill internal transaction.
                 // The index of the transaction to be killed in the cycle
                 final int indexOfToKillTrx = 0;
-                final TrxLookupSet.Transaction toKillTrx = cycle.get(indexOfToKillTrx);
+                final TrxLookupSet.Transaction toKillTrx = cycle.get(indexOfToKillTrx); // 默认直接kill第0个事务
                 simpleDeadlockLog
                     .append(String.format(" Will rollback %s", Long.toHexString(toKillTrx.getTransactionId())));
                 fullDeadlockLog.append(String.format("*** WE ROLL BACK TRANSACTION (%s)\n", indexOfToKillTrx + 1));
@@ -438,7 +438,7 @@ public class DeadlockDetectionTask implements Runnable {
                 EventLogger.log(EventType.DEAD_LOCK_DETECTION, simpleDeadlockLog.toString());
 
                 final long toKillFrontendConnId = toKillTrx.getFrontendConnId();
-                killByFrontendConnId(toKillFrontendConnId);
+                killByFrontendConnId(toKillFrontendConnId); // 根据前端链接id kill事务
             });
         } catch (Throwable ex) {
             logger.error("Failed to do deadlock detection", ex);

@@ -768,9 +768,9 @@ public class TransactionConnectionHolder implements IConnectionHolder {
                 }
             }
 
-            for (Map.Entry<String, List<HeldConnection>> entry : groupHeldReadConns.entrySet()) {
+            for (Map.Entry<String, List<HeldConnection>> entry : groupHeldReadConns.entrySet()) { // 遍历持有的后端连接
                 for (HeldConnection heldConn : entry.getValue()) {
-                    consumer.accept(entry.getKey(), heldConn.connectionId);
+                    consumer.accept(entry.getKey(), heldConn.connectionId); // 设置连接id等信息
                 }
             }
         } finally {

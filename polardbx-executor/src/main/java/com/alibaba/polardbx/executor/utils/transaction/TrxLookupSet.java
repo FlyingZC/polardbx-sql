@@ -35,14 +35,14 @@ import java.util.TreeMap;
  * 3. Store some transactions for future use
  */
 public class TrxLookupSet {
-    /**
+    /** dataSourceName+物理连接id -> 全局事务id
      * Map: pair(group name, DN connection id) -> transaction id
      * Different group-connection pair can be mapped to the same transaction id
      */
     private final Map<GroupConnPair, Long> groupConn2Tran;
 
     /**
-     * transaction id -> transaction
+     * 全局 transaction id -> transaction
      */
     private final Map<Long, Transaction> transactionMap;
 
@@ -110,7 +110,7 @@ public class TrxLookupSet {
         return groupConn2Tran;
     }
 
-    /**
+    /** 方法解释: 通过groupConnPair获取transactionId, 然后通过transactionId获取transaction, 然后通过transaction获取localTransaction
      * Get waiting and blocking transaction information,
      * given a list of groups on the same DN, and the waiting and blocking connection id on that DN
      *
@@ -119,13 +119,13 @@ public class TrxLookupSet {
     public Triple<Transaction, Transaction, String> getWaitingAndBlockingTrx(Collection<String> groupNameList,
                                                                               long waiting,
                                                                               long blocking) {
-        for (final String group : groupNameList) {
-            final Long waitingTrxId = groupConn2Tran.get(new GroupConnPair(group, waiting));
-            final Long blockingTrxId = groupConn2Tran.get(new GroupConnPair(group, blocking));
-            if (null != waitingTrxId || null != blockingTrxId) {
-                final Transaction waitingTrx = transactionMap.get(waitingTrxId);
-                final Transaction blockingTrx = transactionMap.get(blockingTrxId);
-                if (null != waitingTrx && null != blockingTrx) {
+        for (final String group : groupNameList) { // 遍历当前实例下的所有物理库名.[上面查的是当前dn上所有库的锁等待信息;2.死锁只会发生在同一个张物理表上,所以一定在同一个物理库下]
+            final Long waitingTrxId = groupConn2Tran.get(new GroupConnPair(group, waiting)); // 通过 dsName+物理连接id 获取 全局transactionId
+            final Long blockingTrxId = groupConn2Tran.get(new GroupConnPair(group, blocking)); // 通过 dsName+物理连接id 获取 全局transactionId
+            if (null != waitingTrxId || null != blockingTrxId) { // 如果waitingTrxId或者blockingTrxId不为空
+                final Transaction waitingTrx = transactionMap.get(waitingTrxId); // 获取等待事务
+                final Transaction blockingTrx = transactionMap.get(blockingTrxId); // 获取持有锁的事务
+                if (null != waitingTrx && null != blockingTrx) { // 如果waitingTrx和blockingTrx都不为空
                     // Both waiting and blocking trx are on the same group,
                     // they are global trx.
                     return new ImmutableTriple<>(waitingTrx, blockingTrx, group);
@@ -151,7 +151,7 @@ public class TrxLookupSet {
         private Long frontendConnId;
         private String sql;
         private Long startTime;
-        /**
+        /** 物理数据库名 -> 本地事务
          * group name -> local transaction
          */
         private final Map<String, LocalTransaction> localTransactions;
