@@ -18,7 +18,6 @@ package com.alibaba.polardbx;
 
 import com.alibaba.polardbx.common.TddlNode;
 import com.alibaba.polardbx.common.cdc.CdcManagerHelper;
-import com.alibaba.polardbx.optimizer.config.table.charset.CharsetFactory;
 import com.alibaba.polardbx.common.exception.TddlRuntimeException;
 import com.alibaba.polardbx.common.exception.code.ErrorCode;
 import com.alibaba.polardbx.common.model.lifecycle.AbstractLifecycle;
@@ -27,8 +26,6 @@ import com.alibaba.polardbx.common.properties.ConnectionProperties;
 import com.alibaba.polardbx.common.utils.AddressUtils;
 import com.alibaba.polardbx.common.utils.ExecutorMode;
 import com.alibaba.polardbx.common.utils.Pair;
-import com.alibaba.polardbx.common.properties.MppConfig;
-import com.alibaba.polardbx.common.utils.*;
 import com.alibaba.polardbx.common.utils.extension.ExtensionLoader;
 import com.alibaba.polardbx.common.utils.logger.Logger;
 import com.alibaba.polardbx.common.utils.logger.LoggerFactory;
@@ -58,6 +55,7 @@ import com.alibaba.polardbx.matrix.jdbc.TDataSource;
 import com.alibaba.polardbx.net.NIOAcceptor;
 import com.alibaba.polardbx.net.NIOProcessor;
 import com.alibaba.polardbx.net.util.TimeUtil;
+import com.alibaba.polardbx.optimizer.config.table.charset.CharsetFactory;
 import com.alibaba.polardbx.optimizer.context.ExecutionContext;
 import com.alibaba.polardbx.optimizer.core.expression.ExtraFunctionManager;
 import com.alibaba.polardbx.optimizer.memory.MemoryManager;
@@ -71,8 +69,17 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.text.DateFormat;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -227,7 +234,7 @@ public class CobarServer extends AbstractLifecycle implements Lifecycle {
             NodeStatusManager nodeStatusManager = ServiceProvider.getInstance().getServer().getStatusManager();
             LeaderStatusBridge.getInstance().setUpNodeStatusManager(nodeStatusManager);
             CdcRpcClient.buildCdcRpcClient();
-            tryStartCdcManager();
+//            tryStartCdcManager();
 
             // init and start manager, listening manager port
             startupManager(system);
