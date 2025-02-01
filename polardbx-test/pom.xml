@@ -87,8 +87,8 @@
         </dependency>
         <dependency>
             <groupId>com.aliyun</groupId>
-            <artifactId>polardbx-java-connector</artifactId>
-            <version>${polardbx_connector}</version>
+            <artifactId>aliyun-java-sdk-polardbx</artifactId>
+            <version>1.2.0</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

@@ -27,7 +27,7 @@ import org.junit.Assert;
 import javax.sql.DataSource;
 import java.security.Security;
 import java.sql.Connection;
-import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -298,7 +298,6 @@ public class ConnectionManager {
         try {
             Class.forName("com.polardbx.Driver");
             Class.forName("com.polardbx.jdbc.Driver");
-            Driver driver = new com.polardbx.Driver();
 
             String url =
                 String.format(ConfigConstant.X_DRIVER_URL_PATTERN + connProperties,
@@ -307,7 +306,7 @@ public class ConnectionManager {
             info.put("user", polardbxUser);
             info.put("password", polardbxPassword);
 
-            Connection conn = driver.connect(url, info);
+            Connection conn = DriverManager.getConnection(url, info);
             if (conn == null) {
                 throw new RuntimeException("Null connection");
             }
