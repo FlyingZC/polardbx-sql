@@ -610,7 +610,7 @@ public class TGroupDirectConnection implements IConnection {
         }
         try {
             if (conn.isWrapperFor(XConnection.class)) {
-                conn.unwrap(XConnection.class).setLastException(new Exception("discard"));
+                conn.unwrap(XConnection.class).setLastException(new Exception("discard"), false);
             } else {
                 // Discard pooled connection.
                 DruidPooledConnection druidConn = conn.unwrap(DruidPooledConnection.class);

@@ -305,7 +305,7 @@ public class MetaDbUtil {
             }
             if (conn instanceof XConnection) {
                 try {
-                    ((XConnection) conn).setLastException(ex);
+                    ((XConnection) conn).setLastException(ex, false);
                 } catch (SQLException throwables) {
                     if (logger != null) {
                         logger.error("setLastException error", throwables);
