@@ -234,7 +234,7 @@ public class CobarServer extends AbstractLifecycle implements Lifecycle {
             NodeStatusManager nodeStatusManager = ServiceProvider.getInstance().getServer().getStatusManager();
             LeaderStatusBridge.getInstance().setUpNodeStatusManager(nodeStatusManager);
             CdcRpcClient.buildCdcRpcClient();
-//            tryStartCdcManager();
+            tryStartCdcManager();
 
             // init and start manager, listening manager port
             startupManager(system);
