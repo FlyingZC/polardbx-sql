@@ -322,7 +322,7 @@ public class Planner {
      */
     private ExecutionPlan planAfterProcessing(ByteString sql, ExecutionContext executionContext) {
         ByteString afterProcessSql = removeSpecialHint(sql, executionContext);
-        SqlParameterized parameterized = parameterize(afterProcessSql, executionContext);
+        SqlParameterized parameterized = parameterize(afterProcessSql, executionContext); // sql解析 & 参数化处理
         SqlType sqlType = parameterized.getAst().getSqlType();
         return plan(sql, sqlType, parameterized, executionContext);
     }
@@ -383,7 +383,7 @@ public class Planner {
         }
 
         SqlParameterized result =
-            SqlParameterizeUtils.parameterize(afterProcessSql, currentParameter, executionContext, isPrepare);
+            SqlParameterizeUtils.parameterize(afterProcessSql, currentParameter, executionContext, isPrepare); // 1.原始 SQL 解析 & SQL 参数化处理
 
         if (enableSqlCpu) {
             executionContext.getRuntimeStatistics()
@@ -860,9 +860,9 @@ public class Planner {
         // init auto part flag
         initConverterAutoPartFlag(plannerContext, enableStorageTrigger, converter);
 
-        SqlNode validatedNode = converter.validate(ast);
+        SqlNode validatedNode = converter.validate(ast); // 1.校验
         // sqlNode to relNode
-        RelNode relNode = converter.toRel(validatedNode, plannerContext);
+        RelNode relNode = converter.toRel(validatedNode, plannerContext); // 2.生成 RelNode
 
         // relNode to drdsRelNode
         ToDrdsRelVisitor toDrdsRelVisitor = new ToDrdsRelVisitor(validatedNode, plannerContext);
@@ -915,7 +915,7 @@ public class Planner {
                 directMode == ExecutionPlan.DirectMode.MULTI_DB_TABLE_DIRECT) {
                 optimizedNode = unoptimizedNode;
             } else {
-                optimizedNode = optimize(unoptimizedNode, plannerContext);
+                optimizedNode = optimize(unoptimizedNode, plannerContext); // 3.优化
                 if (canDirectByShardingKey(optimizedNode)) {
                     directMode = ExecutionPlan.DirectMode.SHARDING_KEY_DIRECT;
                 } else {
@@ -1140,11 +1140,11 @@ public class Planner {
                 plannerContext.setEvalFuncFromExecutionContext();
                 x.addSnapshot("Start", input, plannerContext);
             });
-        RelNode logicalOutput = optimizeBySqlWriter(input, plannerContext);
+        RelNode logicalOutput = optimizeBySqlWriter(input, plannerContext); // 1.RBO 优化
         plannerContext.getCalcitePlanOptimizerTrace()
             .ifPresent(x -> x.addSnapshot("PlanEnumerate", logicalOutput, plannerContext));
 
-        RelNode bestPlan = optimizeByPlanEnumerator(logicalOutput, plannerContext);
+        RelNode bestPlan = optimizeByPlanEnumerator(logicalOutput, plannerContext); // 2.CBO 优化
 
         // finally we should clear the planner to release memory
         bestPlan.getCluster().getPlanner().clear();
@@ -2350,7 +2350,7 @@ public class Planner {
                     executionPlan =
                         PlanManager.getInstance().choosePlanForPrepare(sqlParameterized, sqlNodeList, executionContext);
                 } else {
-                    executionPlan = PlanManager.getInstance().choosePlan(sqlParameterized, executionContext);
+                    executionPlan = PlanManager.getInstance().choosePlan(sqlParameterized, executionContext); // 1.选择 plan,尝试从缓存里获取 plan
                 }
             }
 

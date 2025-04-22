@@ -108,17 +108,17 @@ public class SqlParameterizeUtils {
                                                 Map<Integer, ParameterContext> parameters,
                                                 ExecutionContext executionContext, boolean isPrepare) {
         SQLStatementParser parser = SQLParserUtils.createSQLStatementParser(sql, JdbcConstants.MYSQL,
-            SQLUtils.parserFeatures);
+            SQLUtils.parserFeatures); // 1.创建sql解析器
 
         try {
-            List<SQLStatement> statements = parser.parseStatementList();
+            List<SQLStatement> statements = parser.parseStatementList(); // 2.进行sql解析处理,返回druid解析后的statement
             if (statements.size() == 0) {
                 return null;
             }
             int lineNum = parser.getLexer().getLine();
             sql.setMultiLine(lineNum >= 1);
             final SQLStatement statement = statements.get(0);
-            return parameterize(sql, statement, parameters, executionContext, isPrepare);
+            return parameterize(sql, statement, parameters, executionContext, isPrepare); // 3.sql参数化处理
         } catch (Throwable t) {
             if (ErrorCode.match(t.getMessage())) {
                 throw t;
@@ -147,7 +147,7 @@ public class SqlParameterizeUtils {
             }
             return new SqlParameterized(sql, sql.toString(), tmpParameters, statement, true);
         } else {
-            return SqlParameterizeUtils.parameterizeStmt(statement, sql, executionContext, isPrepare);
+            return SqlParameterizeUtils.parameterizeStmt(statement, sql, executionContext, isPrepare); // 1.sql参数化处理
         }
     }
 

@@ -494,8 +494,8 @@ public final class FastSqlConstructUtils {
         int option = x.getDistionOption();
         if (option != 0) {
             if (option == SQLSetQuantifier.DISTINCT
-                || option == SQLSetQuantifier.DISTINCTROW) {
-                keywordNodes.add(SqlSelectKeyword.DISTINCT.symbol(SqlParserPos.ZERO));
+                || option == SQLSetQuantifier.DISTINCTROW) { // 检查是否设置了DISTINCT或DISTINCTROW选项
+                keywordNodes.add(SqlSelectKeyword.DISTINCT.symbol(SqlParserPos.ZERO)); // 添加 DISTINCT 关键字到 sqlNode 节点列表中
             }
             keywordList = new SqlNodeList(keywordNodes, SqlParserPos.ZERO);
         }

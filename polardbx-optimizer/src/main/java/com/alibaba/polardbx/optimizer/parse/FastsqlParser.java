@@ -176,14 +176,14 @@ public class FastsqlParser {
     protected SqlNodeList realParse(ByteString sql, List<?> params, ContextParameters contextParameters,
                                     ExecutionContext ec) {
         try {
-            List<SQLStatement> stmtList = FastsqlUtils.parseSql(sql);
+            List<SQLStatement> stmtList = FastsqlUtils.parseSql(sql); // 1.解析参数化的sql字符串成 druid sqlStatement 列表
             List<SqlNode> sqlNodes = new ArrayList<>();
             for (SQLStatement statement : stmtList) {
                 final SqlNode converted;
                 if (contextParameters == null) {
                     contextParameters = new ContextParameters();
                 }
-                converted = convertStatementToSqlNode(statement, params, contextParameters, ec);
+                converted = convertStatementToSqlNode(statement, params, contextParameters, ec); // 2.转换 sqlStatement 为 calcite sqlNode
                 if (statement instanceof MySqlHintStatement && converted instanceof SqlNodeList) {
                     sqlNodes.addAll(((SqlNodeList) converted).getList());
                 } else {

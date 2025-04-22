@@ -203,11 +203,11 @@ public final class PlanCache {
                                        final ExecutionContext ec,
                                        boolean testMode) throws ExecutionException {
         final AtomicBoolean beCached = new AtomicBoolean(true);
-        CacheKey cacheKey = getCacheKey(schema, sqlParameterized, ec, testMode);
-        final Callable<ExecutionPlan> valueLoader = () -> {
+        CacheKey cacheKey = getCacheKey(schema, sqlParameterized, ec, testMode); // 1.创建 cache key
+        final Callable<ExecutionPlan> valueLoader = () -> { // 2.创建 value loader,用来创建缓存
             ContextParameters contextParameters = new ContextParameters(testMode);
             SqlNodeList astList = new FastsqlParser()
-                .parse(ByteString.from(sqlParameterized.getSql()), params, contextParameters, ec);
+                .parse(ByteString.from(sqlParameterized.getSql()), params, contextParameters, ec); // 2.1.解析参数化 sql,返回 calcite sqlNode
             // parameterizedSql can not be a multiStatement.
             SqlNode ast = astList.get(0);
             beCached.set(false);
@@ -257,7 +257,7 @@ public final class PlanCache {
 
         ExecutionPlan plan;
         try {
-            plan = cache.get(cacheKey, valueLoader);
+            plan = cache.get(cacheKey, valueLoader); // 3.从缓存中获取执行计划,如果没有则通过上面的 valueLoader 创建
         } catch (UncheckedExecutionException ex) {
             if (ErrorCode.match(ex.getMessage())) {
                 if (ex.getCause() instanceof TddlRuntimeException) {
