@@ -204,7 +204,7 @@ public class PlanManager extends AbstractLifecycle implements BaselineManageable
 
         try {
             RelNode rel = doChoosePlan(executionPlan.getPlan(), executionPlan.getAst(), sqlParameterized,
-                executionPlan.isExplain(), executionContext);
+                executionPlan.isExplain(), executionContext); // 1.选择plan.尝试从缓存里获取plan
 
             final ExecutionPlan resultPlan = executionPlan.copy(rel);
 

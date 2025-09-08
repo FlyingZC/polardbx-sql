@@ -225,9 +225,9 @@ public class SqlConverter {
     }
 
     public RelOptCluster createRelOptCluster(PlannerContext plannerContext) {
-        RexBuilder rexBuilder = new RexBuilder(typeFactory);
-        RelOptCostFactory costFactory = DrdsRelOptCostImpl.FACTORY;
-        VolcanoPlanner planner = new VolcanoPlanner(costFactory, plannerContext);
+        RexBuilder rexBuilder = new RexBuilder(typeFactory); // rexBuilder 用于生成和操作行表达式 rexNode, 传入 type factory
+        RelOptCostFactory costFactory = DrdsRelOptCostImpl.FACTORY; // 指定 代价模型 factory 实现类
+        VolcanoPlanner planner = new VolcanoPlanner(costFactory, plannerContext); // CBO 优化器,指定 cost factory
         if (plannerContext != null && plannerContext.getExecutionContext() != null &&
             plannerContext.getExecutionContext().isEnableRuleCounter()) {
             planner.setRuleCounter();
@@ -236,8 +236,8 @@ public class SqlConverter {
         planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
         planner.addRelTraitDef(RelCollationTraitDef.INSTANCE);
         planner.addRelTraitDef(RelDistributionTraitDef.INSTANCE);
-        RelOptCluster relOptCluster = RelOptCluster.create(planner, rexBuilder);
-        relOptCluster.setMetadataProvider(DrdsRelMetadataProvider.INSTANCE);
+        RelOptCluster relOptCluster = RelOptCluster.create(planner, rexBuilder); // 创建 RelOptCluster
+        relOptCluster.setMetadataProvider(DrdsRelMetadataProvider.INSTANCE); // 设置 MetadataProvider
         return relOptCluster;
     }
 

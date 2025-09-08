@@ -256,7 +256,7 @@ public final class PlanCache {
         };
 
         ExecutionPlan plan;
-        try {
+        try {cache.asMap().clear(); // TODO zc mocked
             plan = cache.get(cacheKey, valueLoader); // 3.从缓存中获取执行计划,如果没有则通过上面的 valueLoader 创建
         } catch (UncheckedExecutionException ex) {
             if (ErrorCode.match(ex.getMessage())) {

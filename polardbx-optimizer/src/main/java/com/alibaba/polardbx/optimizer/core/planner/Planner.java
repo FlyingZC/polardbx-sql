@@ -915,7 +915,7 @@ public class Planner {
                 directMode == ExecutionPlan.DirectMode.MULTI_DB_TABLE_DIRECT) {
                 optimizedNode = unoptimizedNode;
             } else {
-                optimizedNode = optimize(unoptimizedNode, plannerContext); // 3.优化
+                optimizedNode = optimize(unoptimizedNode, plannerContext); // 3.RBO&CBO 优化
                 if (canDirectByShardingKey(optimizedNode)) {
                     directMode = ExecutionPlan.DirectMode.SHARDING_KEY_DIRECT;
                 } else {
@@ -1162,24 +1162,24 @@ public class Planner {
         plannerContext.getCalcitePlanOptimizerTrace()
             .ifPresent(x -> x.addSnapshot("Start", input, plannerContext));
 
-        HepProgramBuilder hepPgmBuilder = new HepProgramBuilder();
-        hepPgmBuilder.addMatchOrder(HepMatchOrder.ARBITRARY);
+        HepProgramBuilder hepPgmBuilder = new HepProgramBuilder(); // 1.创建 HepProgramBuilder 实例，用于构建 HEP 规则程序
+        hepPgmBuilder.addMatchOrder(HepMatchOrder.ARBITRARY); // // 设置规则匹配顺序为任意顺序（ARBITRARY），即不强制特定顺序
 
-        for (SQL_REWRITE_RULE_PHASE r : SQL_REWRITE_RULE_PHASE.values()) {
-            hepPgmBuilder.addMatchOrder(r.getMatchOrder());
-            hepPgmBuilder.addGroupBegin();
-            for (ImmutableList<RelOptRule> relOptRuleList : r.getCollectionList()) {
+        for (SQL_REWRITE_RULE_PHASE r : SQL_REWRITE_RULE_PHASE.values()) { // 遍历所有 SQL 重写阶段（SQL_REWRITE_RULE_PHASE）
+            hepPgmBuilder.addMatchOrder(r.getMatchOrder()); // 添加当前阶段的匹配顺序到规则程序中
+            hepPgmBuilder.addGroupBegin(); // 开始一个新的规则组
+            for (ImmutableList<RelOptRule> relOptRuleList : r.getCollectionList()) { // 遍历当前阶段的所有规则集合（collectionList）,将这些规则集合加入规则程序
                 hepPgmBuilder.addRuleCollection(relOptRuleList);
             }
-            for (RelOptRule relOptRule : r.getSingleList()) {
+            for (RelOptRule relOptRule : r.getSingleList()) { // 遍历当前阶段的单条规则（singleList），将每条规则实例添加到规则程序中
                 hepPgmBuilder.addRuleInstance(relOptRule);
             }
-            hepPgmBuilder.addGroupEnd();
+            hepPgmBuilder.addGroupEnd(); // 结束当前规则组
         }
 
-        final HepPlanner planner = new HepPlanner(hepPgmBuilder.build(), plannerContext);
-        planner.setRoot(input);
-        return planner.findBestExp();
+        final HepPlanner planner = new HepPlanner(hepPgmBuilder.build(), plannerContext); // 使用构建好的规则程序创建一个 HepPlanner 实例
+        planner.setRoot(input); // 设置优化器的根节点为输入的 RelNode
+        return planner.findBestExp(); // 执行规则程序，返回经过规则处理后的最优 RelNode
     }
 
     public RelNode optimizeByPlanEnumerator(RelNode input, PlannerContext plannerContext) {

@@ -37,7 +37,7 @@ public class MysqlDateTime implements Serializable {
     private long hour;
     private long minute;
     private long second;
-
+    // nanoseconds
     private long secondPart;
 
     private int sqlType;

@@ -176,7 +176,7 @@ public class FastsqlParser {
     protected SqlNodeList realParse(ByteString sql, List<?> params, ContextParameters contextParameters,
                                     ExecutionContext ec) {
         try {
-            List<SQLStatement> stmtList = FastsqlUtils.parseSql(sql); // 1.解析参数化的sql字符串成 druid sqlStatement 列表
+            List<SQLStatement> stmtList = FastsqlUtils.parseSql(sql); // 1.解析参数化的 sql 字符串成 druid sqlStatement 列表
             List<SqlNode> sqlNodes = new ArrayList<>();
             for (SQLStatement statement : stmtList) {
                 final SqlNode converted;

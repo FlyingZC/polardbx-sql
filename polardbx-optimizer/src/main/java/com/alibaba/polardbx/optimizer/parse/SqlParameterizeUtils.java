@@ -172,7 +172,7 @@ public class SqlParameterizeUtils {
         List<Object> outParameters = new ArrayList<>();
 
         StringBuilder out = new StringBuilder();
-        DrdsParameterizeSqlVisitor visitor = new DrdsParameterizeSqlVisitor(out, true, executionContext);
+        DrdsParameterizeSqlVisitor visitor = new DrdsParameterizeSqlVisitor(out, true, executionContext); // 1.创建sql参数化 visitor
         visitor.setOutputParameters(outParameters);
         // for parameterize in expr
         if (isPrepare) {
@@ -182,7 +182,7 @@ public class SqlParameterizeUtils {
             visitor.setParameterizedMergeInList(true);
         }
 
-        stmt.accept(visitor);
+        stmt.accept(visitor); // 2.进行sql参数化处理
         String s = out.toString();
         return new SqlParameterized(sql, s, Lists.newArrayList(outParameters), stmt, false);
     }
