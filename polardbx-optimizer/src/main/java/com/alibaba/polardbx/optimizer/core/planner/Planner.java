@@ -321,10 +321,10 @@ public class Planner {
      * 经过各种预处理后生成执行计划
      */
     private ExecutionPlan planAfterProcessing(ByteString sql, ExecutionContext executionContext) {
-        ByteString afterProcessSql = removeSpecialHint(sql, executionContext);
-        SqlParameterized parameterized = parameterize(afterProcessSql, executionContext); // sql解析 & 参数化处理
+        ByteString afterProcessSql = removeSpecialHint(sql, executionContext); // 1.移除 sql hint
+        SqlParameterized parameterized = parameterize(afterProcessSql, executionContext); // 2.sql解析 & 参数化处理
         SqlType sqlType = parameterized.getAst().getSqlType();
-        return plan(sql, sqlType, parameterized, executionContext);
+        return plan(sql, sqlType, parameterized, executionContext); // 3.获取执行计划
     }
 
     private ExecutionPlan plan(ByteString sql, SqlType sqlType, SqlParameterized parameterized,
